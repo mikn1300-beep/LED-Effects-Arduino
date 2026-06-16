@@ -13,6 +13,7 @@
  */
 
 #include <Adafruit_NeoPixel.h>
+#include <math.h>
 
 // ========== CONFIGURACIÓN DE PINES Y PARÁMETROS ==========
 
@@ -68,6 +69,11 @@ int effectSpeed = 50;
 int rainbowIndex = 0;
 int sparkleCount = 0;
 
+// Variables para manejo del botón
+int pressCount = 0;
+unsigned long firstPressTime = 0;
+bool buttonWasReleased = true;
+
 // ========== CONFIGURACIÓN INICIAL ==========
 
 void setup() {
@@ -79,6 +85,7 @@ void setup() {
   
   // Inicializar tira LED
   strip.begin();
+  strip.setBrightness(BRIGHTNESS);
   strip.show();
   
   // Configurar pin del botón
@@ -123,12 +130,10 @@ void loop() {
 
 void handleButtonPress() {
   if (digitalRead(BUTTON_PIN) == LOW) { // Botón presionado (pullup activo)
+    buttonWasReleased = false;
+    
     if (millis() - lastButtonPress >= DEBOUNCE_DELAY) {
       lastButtonPress = millis();
-      
-      // Ciclo de funciones con cada presión
-      static int pressCount = 0;
-      static unsigned long firstPressTime = 0;
       
       if (pressCount == 0) {
         firstPressTime = millis();
@@ -141,20 +146,24 @@ void handleButtonPress() {
         Serial.println("→ Subiendo brillo");
         increaseBrightness();
         pressCount = 0;
-      }
-      // Si pasó tiempo, es un clic simple
-      else if (pressCount == 1 && (millis() - firstPressTime) > 500) {
-        Serial.println("→ Alternando encendido/apagado");
-        togglePower();
-        pressCount = 0;
+        buttonWasReleased = true;
       }
     }
-  } else {
-    // Si el botón se suelta y pasó tiempo suficiente, cambiar efecto
-    if (pressCount > 0 && (millis() - lastButtonPress) > 800) {
-      Serial.println("→ Cambiando efecto");
-      changeEffect();
+  } else { // Botón liberado
+    if (!buttonWasReleased) {
+      // Si el botón se suelta después de presión larga
+      if (pressCount == 1 && (millis() - firstPressTime) > 800) {
+        Serial.println("→ Cambiando efecto");
+        changeEffect();
+      }
+      // Si el botón se suelta rápidamente (clic simple)
+      else if (pressCount == 1 && (millis() - firstPressTime) <= 500) {
+        Serial.println("→ Alternando encendido/apagado");
+        togglePower();
+      }
+      
       pressCount = 0;
+      buttonWasReleased = true;
     }
   }
 }
@@ -301,7 +310,7 @@ void colorWave(uint32_t color, uint8_t speed) {
   waveIndex = (waveIndex + 1) % (NUM_LEDS * 2);
   
   for(int i = 0; i < NUM_LEDS; i++) {
-    int brightness = abs(sin((float)(i + waveIndex) / 5)) * 255;
+    int brightness = (int)(fabs(sin((float)(i + waveIndex) / 5.0)) * 255.0);
     uint8_t r = (color >> 16) & 255;
     uint8_t g = (color >> 8) & 255;
     uint8_t b = color & 255;
@@ -356,8 +365,8 @@ void whiteFlash() {
     colorFill(strip.Color(255, 255, 255), 0);
   } else {
     strip.clear();
+    strip.show();
   }
-  strip.show();
 }
 
 // Efecto 8: Fuego
