@@ -61,7 +61,7 @@ int currentBrightness = BRIGHTNESS;
 unsigned long lastButtonPress = 0;
 unsigned long lastUpdate = 0;
 const unsigned long DEBOUNCE_DELAY = 200;
-int effectCount = 12; // Número total de efectos disponibles
+int effectCount = 17; // Número total de efectos disponibles
 
 // Variables para efectos
 uint32_t colorWheel = 0;
@@ -216,6 +216,11 @@ void printEffectName(int effect) {
     case 9: Serial.println("   → EFECTO THEATER"); break;
     case 10: Serial.println("   → SCANNER"); break;
     case 11: Serial.println("   → ARCO DISCO"); break;
+    case 12: Serial.println("   → FUEGO AVANZADO"); break;
+    case 13: Serial.println("   → ARCOÍRIS FLUIDO"); break;
+    case 14: Serial.println("   → RGB ALTERNADO"); break;
+    case 15: Serial.println("   → FUEGO CON CHISPAS"); break;
+    case 16: Serial.println("   → EFECTO PLASMA"); break;
     default: Serial.println("   → DESCONOCIDO"); break;
   }
 }
@@ -259,6 +264,21 @@ void executeEffect(int effect) {
       break;
     case 11:
       discoBall();
+      break;
+    case 12:
+      fireAdvanced();
+      break;
+    case 13:
+      rainbowFluid();
+      break;
+    case 14:
+      rgbAlternado();
+      break;
+    case 15:
+      fireWithSparks();
+      break;
+    case 16:
+      plasmaEffect();
       break;
     default:
       colorFill(strip.Color(255, 255, 255), 50);
@@ -417,6 +437,114 @@ void scanner(uint32_t color) {
 void discoBall() {
   for(int i = 0; i < NUM_LEDS; i++) {
     strip.setPixelColor(i, Wheel(random(0, 256)));
+  }
+  strip.show();
+}
+
+// ========== NUEVOS 5 EFECTOS ==========
+
+// Efecto 12: Fuego avanzado (más realista)
+void fireAdvanced() {
+  static int fireArray[60];
+  
+  // Inicializar array si es la primera vez
+  static bool initialized = false;
+  if (!initialized) {
+    for(int i = 0; i < NUM_LEDS; i++) {
+      fireArray[i] = 0;
+    }
+    initialized = true;
+  }
+  
+  // Actualizar valores de fuego
+  for(int i = 0; i < NUM_LEDS; i++) {
+    if (i == 0) {
+      fireArray[i] = random(200, 255);
+    } else {
+      fireArray[i] = (fireArray[i-1] + fireArray[i] + random(0, 100)) / 3;
+    }
+  }
+  
+  // Mostrar colores
+  for(int i = 0; i < NUM_LEDS; i++) {
+    int val = constrain(fireArray[i], 0, 255);
+    int r = val;
+    int g = val / 2;
+    int b = 0;
+    strip.setPixelColor(i, strip.Color(r, g, b));
+  }
+  strip.show();
+}
+
+// Efecto 13: Arcoíris fluido suave
+void rainbowFluid() {
+  static float phase = 0;
+  phase += 0.02;
+  
+  for(int i = 0; i < NUM_LEDS; i++) {
+    float hue = (i + phase * 10) / NUM_LEDS;
+    uint32_t color = Wheel((int)((hue * 256)) & 255);
+    strip.setPixelColor(i, color);
+  }
+  strip.show();
+}
+
+// Efecto 14: RGB Alternado (Rojo-Verde-Azul)
+void rgbAlternado() {
+  static int rgbPhase = 0;
+  rgbPhase = (rgbPhase + 1) % 3;
+  
+  uint32_t color;
+  switch(rgbPhase) {
+    case 0:
+      color = strip.Color(255, 0, 0);    // Rojo
+      break;
+    case 1:
+      color = strip.Color(0, 255, 0);    // Verde
+      break;
+    case 2:
+      color = strip.Color(0, 0, 255);    // Azul
+      break;
+  }
+  
+  colorFill(color, 0);
+}
+
+// Efecto 15: Fuego con chispas blancas
+void fireWithSparks() {
+  for(int i = 0; i < NUM_LEDS; i++) {
+    int intensity = random(150, 255);
+    int r = intensity;
+    int g = random(0, intensity / 3);
+    int b = 0;
+    
+    // 15% posibilidad de chispa blanca
+    if (random(0, 100) < 15) {
+      r = 255;
+      g = 255;
+      b = random(100, 200);
+    }
+    
+    strip.setPixelColor(i, strip.Color(r, g, b));
+  }
+  strip.show();
+}
+
+// Efecto 16: Plasma (ondas de colores caóticas)
+void plasmaEffect() {
+  static int plasmaPhase = 0;
+  plasmaPhase = (plasmaPhase + 1) & 255;
+  
+  for(int i = 0; i < NUM_LEDS; i++) {
+    int r = (int)(128 + 127 * sin((i + plasmaPhase) * 0.1));
+    int g = (int)(128 + 127 * sin((i + plasmaPhase) * 0.05 + 2));
+    int b = (int)(128 + 127 * sin((i + plasmaPhase) * 0.15 + 4));
+    
+    r = constrain(r, 0, 255);
+    g = constrain(g, 0, 255);
+    b = constrain(b, 0, 255);
+    
+    strip.setPixelColor(i, strip.Color(r, g, b));
   }
   strip.show();
 }
