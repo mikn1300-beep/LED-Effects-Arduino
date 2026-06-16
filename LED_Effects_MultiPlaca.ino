@@ -23,24 +23,24 @@
 // #define BOARD_ESP8266_D1   // ESP8266 D1
 // #define BOARD_ESP32_GROOM  // ESP32 GROOM-32
 
-// SELECCIONA EL PIN DE DATOS (GPIO) - Ajusta según tu conexión
+// SELECCIONA EL PIN DE DATOS (GPIO) - PIN 2 PARA TODOS
 #ifdef BOARD_ESP32
-  #define LED_PIN 5           // GPIO5 para ESP32
+  #define LED_PIN 2           // GPIO2 para ESP32
   #define BUTTON_PIN 0        // GPIO0 (botón BOOT) - Cambia si necesitas otro
 #endif
 
 #ifdef BOARD_ESP32_C3
-  #define LED_PIN 8           // GPIO8 para ESP32-C3
+  #define LED_PIN 2           // GPIO2 para ESP32-C3
   #define BUTTON_PIN 9        // GPIO9 para botón
 #endif
 
 #ifdef BOARD_ESP8266_D1
-  #define LED_PIN D4          // GPIO2 (D4) para ESP8266 D1
+  #define LED_PIN 2           // GPIO2 para ESP8266 D1
   #define BUTTON_PIN D8       // GPIO15 (D8) para botón
 #endif
 
 #ifdef BOARD_ESP32_GROOM
-  #define LED_PIN 12          // GPIO12 para ESP32 GROOM-32
+  #define LED_PIN 2           // GPIO2 para ESP32 GROOM-32
   #define BUTTON_PIN 35       // GPIO35 para botón
 #endif
 
